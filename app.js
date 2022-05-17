@@ -11,19 +11,28 @@ const app = express();
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-    const { name, email, password, address, age } = req.body;
     try {
-        const newUser = await User.create({ name, 
-            email, 
-            password, 
-            address, 
-            age });
-
-        const salt = await genSalt(10);
-        newUser.password = await hash(password, salt);
-        await newUser.save();
-
-        res.json(newUser); 
+        let password=await req.body.password
+        let salt=await bcrypt.genSalt(5)
+        let hashedPassword=await bcrypt.hash(password,salt)
+        let newUser=await User.create({
+            name:req.body.name,
+            email:req.body.email,
+            password:hashedPassword,
+            age:req.body.age,
+            address:req.body.address
+   
+        })
+        let email=await User.findOne({email:req.body.email})
+         if(email){
+            res.status(200).send("The user with that email arleady exists")
+        }
+        else{
+    
+            await newUser.save();
+            res.status(200).send(newUser)
+        }
+    
     } catch (error) {
         console.log(error);
         return res.status(500).json(error);
@@ -41,13 +50,14 @@ app.post("/signin", async (req, res) => {
 
         const token = sign(
             { id: user.id },
-            "sequelize_jwt_123"
+            "sequelized_project_2344"
         );
 
         res.header("Authorization", token).send({
-            status: 200,
+           
+            token: 'Bearer ' + token,
             message: "Logged in successively",
-            token: 'Bearer ' + token
+            status: 200
         });
     }
     catch (error) {
@@ -94,6 +104,20 @@ app.put("/users/:id", async (req, res) => {
         return res.status(500).json(error)
     }
 })
+
+app.delete('/users/:id', async (req, res) => {
+    const id = req.params.id
+    try {
+      const user = await User.findOne({ where: { id } })
+  
+      await user.destroy()
+  
+      return res.json({ message: 'User deleted successvely' })
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ error: 'Something went wrong' })
+    }
+  })
 
 app.listen({ port: 6000 }, async () => {
     console.log("Server up on port 6000");
