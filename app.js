@@ -105,19 +105,6 @@ app.put("/users/:id", async (req, res) => {
     }
 })
 
-app.delete('/users/:id', async (req, res) => {
-    const id = req.params.id
-    try {
-      const user = await User.findOne({ where: { id } })
-  
-      await user.destroy()
-  
-      return res.json({ message: 'User deleted successvely' })
-    } catch (err) {
-      console.log(err)
-      return res.status(500).json({ error: 'Something went wrong' })
-    }
-  })
 
 app.listen({ port: 6000 }, async () => {
     console.log("Server up on port 6000");
